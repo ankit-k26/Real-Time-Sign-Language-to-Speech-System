@@ -3,10 +3,6 @@ Step 1: Data Collection
 Captures webcam video, detects hand landmarks using MediaPipe Tasks API,
 stores sequences of 30 frames as .npy files.
 
-Uses the same MediaPipe Tasks API as gesture_controller.py
-(mediapipe.tasks.python.vision.HandLandmarker) instead of the legacy
-mp.solutions.hands API.
-
 Usage:
     python 1_collect_data.py --word "hello" --sequences 30
     python 1_collect_data.py --word "thanks" --sequences 30
