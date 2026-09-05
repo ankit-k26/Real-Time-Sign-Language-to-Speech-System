@@ -22,7 +22,7 @@ body { margin: 0; background: #0f0f14; color: #f0f0f0; font-family: Arial, sans-
 .right-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 
 .video-wrap { position: relative; background: #000; border-radius: 8px; overflow: hidden; flex: 1; min-height: 0; }
-.video-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.video-wrap video { width: 100%; height: 100%; object-fit: contain; display: block; }
 .status-dot {
   position: absolute; top: 8px; right: 8px; width: 10px; height: 10px; border-radius: 50%;
 }

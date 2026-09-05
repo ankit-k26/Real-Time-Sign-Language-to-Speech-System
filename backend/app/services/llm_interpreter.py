@@ -1,103 +1,106 @@
 """
 LLM Integration Module
-Uses LangChain + Ollama (gemma:27b or gemma4:31b-cloud) to convert
+Uses the native google-genai SDK with Google Gemini to convert
 raw gesture tokens + emotion into a natural, grammatically-correct sentence.
+
+Set the GOOGLE_API_KEY environment variable to your Gemini API key.
+If no key is set, the interpreter falls back to a rule-based heuristic.
 """
 
+import logging
+import os
 import threading
 from typing import Callable, Optional
 
-# ── LangChain imports ────────────────────────────────────────────────────────
-from langchain_ollama import ChatOllama                      # ✅ correct class
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser   # ✅ for runnables
-# LLMChain removed — replaced by LCEL pipe (prompt | llm | parser)
+from dotenv import load_dotenv
+load_dotenv()
 
-# ── Prompt template ──────────────────────────────────────────────────────────
-PROMPT_TEMPLATE = PromptTemplate(
-    input_variables=["tokens", "emotion"],
-    template="""You are a sign language interpreter assistant.
-Convert the following sign language gesture tokens into a single, natural English sentence.
+logger = logging.getLogger(__name__)
 
-Words: {tokens}
-Emotion: {emotion}
-
-Rules:
-- Fix grammar and word order
-- Maintain the original meaning
-- Reflect the emotion subtly in tone if appropriate
-- Return ONLY the final sentence, nothing else
-- Do not add explanations, quotes, or punctuation beyond the sentence
-
-Sentence:"""
+# ── System prompt ─────────────────────────────────────────────────────────────
+_SYSTEM_PROMPT = (
+    "You are a sign language interpreter assistant. "
+    "Convert sign language gesture tokens into a single, natural English sentence. "
+    "Fix grammar and word order. Maintain the original meaning. "
+    "Reflect the emotion subtly in tone if appropriate. "
+    "Return ONLY the final sentence — no explanations, no quotes, no extra punctuation."
 )
+
+def _build_user_prompt(tokens: list[str], emotion: str) -> str:
+    return f"Words: {' '.join(tokens)}\nEmotion: {emotion}\n\nSentence:"
 
 
 class LLMInterpreter:
-    """Wraps Ollama LLM for async sentence interpretation.
+    """Wraps Google Gemini (google-genai SDK) for async sentence interpretation.
 
     Usage:
         llm = LLMInterpreter()
+        # Sync:
+        sentence = llm.interpret(["hello", "how", "you"], "happy")
         # Async (non-blocking):
         llm.interpret_async(["hello", "how", "you"],
                             emotion="happy",
                             callback=lambda s: print(s))
-        # Sync:
-        sentence = llm.interpret(["hello", "how", "you"], "happy")
     """
 
     def __init__(self,
-                 model: str = "gemma4:31b-cloud",
-                 base_url: str = "http://localhost:11434",
-                 temperature: float = 0.4,
+                 model: str = "gemini-3.7-flash",
+                 api_key: Optional[str] = None,
                  timeout: int = 30):
         """
         Args:
-            model:      Ollama model name. Examples:
-                        "gemma3:1b"          ← lightweight for dev/testing
-                        "gemma:7b"           ← good balance
-                        "gemma4:31b-cloud"   ← as specified in project brief
-            base_url:   Ollama server URL (default local).
-            temperature: Generation temperature.
-            timeout:    Request timeout in seconds.
+            model:   Gemini model name (default: "gemini-3.7-flash").
+            api_key: Google API key. Falls back to the GOOGLE_API_KEY env var.
+            timeout: Request timeout in seconds.
         """
         self._model_name = model
+        self._timeout = timeout
         self._lock = threading.Lock()
         self._busy = False
+        self._client = None
+
+        resolved_key = api_key or os.environ.get("GOOGLE_API_KEY", "")
+        if not resolved_key:
+            logger.warning(
+                "[LLMInterpreter] GOOGLE_API_KEY is not set. "
+                "Using fallback rule-based interpreter."
+            )
+            return
 
         try:
-            llm = ChatOllama(                                # ✅ ChatOllama
-                model=model,
-                base_url=base_url,
-                temperature=temperature,
-                timeout=timeout,
-            )
-            # ✅ LCEL runnable chain — replaces deprecated LLMChain
-            self._chain = PROMPT_TEMPLATE | llm | StrOutputParser()
-            print(f"[LLMInterpreter] Connected to Ollama model '{model}'.")
+            from google import genai
+            self._client = genai.Client(api_key=resolved_key)
+            print(f"[LLMInterpreter] Connected to Gemini model '{model}'.")
         except Exception as e:
-            print(f"[LLMInterpreter] WARNING: Could not connect to Ollama "
-                  f"({e}). Using fallback rule-based interpreter.")
-            self._chain = None
+            logger.warning(
+                "[LLMInterpreter] Could not initialise Gemini (%s). "
+                "Using fallback rule-based interpreter.", e
+            )
 
-    # ── Public API ────────────────────────────────────────────────────────
+    # ── Public API ────────────────────────────────────────────────────────────
 
     def interpret(self, tokens: list[str], emotion: str = "neutral") -> str:
         """Synchronously convert tokens → sentence. Blocks until done."""
         if not tokens:
             return ""
 
-        token_str = " ".join(tokens)
-
-        if self._chain is None:
+        if self._client is None:
             return self._fallback(tokens, emotion)
 
         try:
-            # ✅ Runnable returns str directly via StrOutputParser
-            sentence = self._chain.invoke(
-                {"tokens": token_str, "emotion": emotion}
-            ).strip().strip('"').strip("'")
+            from google import genai
+            from google.genai import types
+
+            chat = self._client.chats.create(
+                model=self._model_name,
+                config=types.GenerateContentConfig(
+                    system_instruction=_SYSTEM_PROMPT,
+                ),
+            )
+            response = chat.send_message(_build_user_prompt(tokens, emotion))
+            sentence = response.text.strip().strip('"').strip("'")
             return sentence if sentence else self._fallback(tokens, emotion)
+
         except Exception as e:
             print(f"[LLMInterpreter] Inference error: {e}")
             return self._fallback(tokens, emotion)
@@ -127,11 +130,11 @@ class LLMInterpreter:
     def is_busy(self) -> bool:
         return self._busy
 
-    # ── Fallback ──────────────────────────────────────────────────────────
+    # ── Fallback ──────────────────────────────────────────────────────────────
 
     @staticmethod
     def _fallback(tokens: list[str], emotion: str) -> str:
-        """Simple heuristic when Ollama is unavailable."""
+        """Simple heuristic when the Gemini API is unavailable."""
         sentence = " ".join(tokens).strip()
         if not sentence:
             return ""

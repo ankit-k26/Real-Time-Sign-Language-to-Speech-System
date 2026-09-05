@@ -12,6 +12,9 @@ import threading
 import time
 from collections import deque
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import cv2
 import numpy as np
 import mediapipe as mp
@@ -93,7 +96,7 @@ class ModelRegistry:
 class SignSession:
     """Per-WebSocket-connection state. One instance per connected client."""
 
-    def __init__(self, llm_model: str = "gemma4:31b-cloud"):
+    def __init__(self, llm_model: str = os.environ.get("GEMINI_MODEL", "gemini-3.7-flash")):
         self.model, self.label_map = ModelRegistry.get()
 
         base_options = python.BaseOptions(model_asset_path=HAND_MODEL_PATH)

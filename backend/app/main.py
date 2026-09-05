@@ -25,6 +25,9 @@ import base64
 import json
 import os
 
+from dotenv import load_dotenv
+load_dotenv()  # loads backend/.env into os.environ
+
 import cv2
 import numpy as np
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -37,9 +40,12 @@ from .services.tts_service import TTSService
 
 app = FastAPI(title="Sign Language to Speech API")
 
+_raw_origins = os.environ.get("ALLOWED_ORIGINS", "*")
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten in production
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
