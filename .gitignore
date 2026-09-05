@@ -13,6 +13,8 @@ frontend/.vite/
 # Trained models & data (large / user-generated)
 backend/models/*.keras
 backend/models/*.json
+backend/dataset/
+backend/processed/
 !backend/models/sign_model.keras
 !backend/models/model_meta.json
 
