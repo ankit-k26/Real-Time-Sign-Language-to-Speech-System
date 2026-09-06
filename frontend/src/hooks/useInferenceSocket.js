@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const WS_URL = (import.meta.env.VITE_WS_URL || "ws://localhost:8000") + "/ws/infer";
+const WS_URL = (import.meta.env.VITE_WS_BASE_URL || "ws://localhost:8000") + "/ws/infer";
 
 export function useInferenceSocket() {
   const wsRef = useRef(null);

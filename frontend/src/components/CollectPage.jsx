@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import { useWebcam } from "../hooks/useWebcam";
 
-const WS_URL = (import.meta.env.VITE_WS_URL || "ws://localhost:8000") + "/ws/collect";
+const WS_URL = (import.meta.env.VITE_WS_BASE_URL || "ws://localhost:8000") + "/ws/collect";
 
 export default function CollectPage() {
   const videoRef = useRef(null);
