@@ -11,7 +11,7 @@ python-dotenv>=1.0.0
 opencv-python>=4.9.0
 mediapipe>=0.10.32
 numpy>=1.26.0
-tensorflow>=2.15.0,<2.16.0  # Keras 2 range — keeps sign_model.keras compatible
+tensorflow>=2.18.0
 scikit-learn>=1.4.0
 
 # LLM integration
