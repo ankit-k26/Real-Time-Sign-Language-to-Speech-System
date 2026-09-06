@@ -18,8 +18,8 @@ backend/processed/
 !backend/models/sign_model.keras
 !backend/models/model_meta.json
 
-# Downloaded MediaPipe task files
-backend/*.task
+# Downloaded MediaPipe task files — committed so Render has them at build time
+# backend/*.task  ← intentionally NOT ignored
 
 # Env files
 .env

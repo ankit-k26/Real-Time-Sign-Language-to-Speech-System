@@ -29,13 +29,17 @@ class TTSService:
         self._rate = rate
         self._volume = volume
         self._voice_index = voice_index
-        if _PYTTSX3_OK:
-            self.backend = "pyttsx3"
-        elif _GTTS_OK:
+        # Prefer gTTS (works on any Linux server, including Render).
+        # Fall back to pyttsx3 only when running locally on a machine with an
+        # audio driver (Windows/macOS), and gTTS is not installed.
+        if _GTTS_OK:
             self.backend = "gtts"
+        elif _PYTTSX3_OK:
+            self.backend = "pyttsx3"
         else:
             self.backend = None
             print("[TTSService] WARNING: no TTS backend available.")
+
 
     def synthesize(self, text: str) -> tuple[bytes, str]:
         """Returns (audio_bytes, mime_type). Raises on failure."""

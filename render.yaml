@@ -1,0 +1,46 @@
+# render.yaml — Render Blueprint (Backend only)
+# Frontend is hosted on Vercel — only the FastAPI backend runs here.
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # ── FastAPI Backend ────────────────────────────────────────────────────
+  - type: web
+    name: sl-backend
+    runtime: python
+    region: oregon          # change to your preferred region
+    plan: starter           # free tier spins down; starter ($7/mo) stays live
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+
+    envVars:
+      # ── Secret — enter value in the Render dashboard ──
+      - key: GOOGLE_API_KEY
+        sync: false
+
+      # ── Model & LLM ──
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: LLM_TEMPERATURE
+        value: "0.4"
+      - key: LLM_TIMEOUT
+        value: "30"
+
+      # ── TTS ──
+      - key: TTS_BACKEND
+        value: gtts
+
+      # ── Inference thresholds ──
+      - key: CONFIDENCE_THRESH
+        value: "0.70"
+      - key: SAME_WORD_STREAK
+        value: "8"
+      - key: PAUSE_SECONDS
+        value: "2.5"
+      - key: MAX_TOKEN_BUFFER
+        value: "20"
+
+      # ── CORS ──
+      - key: ALLOWED_ORIGINS
+        value: "https://real-time-sign-language-to-speech-s.vercel.app"
