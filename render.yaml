@@ -8,7 +8,7 @@ services:
     name: sl-backend
     runtime: python
     region: oregon          # change to your preferred region
-    plan: starter           # free tier spins down; starter ($7/mo) stays live
+    plan: free              # spins down after 15 min inactivity; cold start ~60-90s with ML models
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -18,6 +18,10 @@ services:
       # ── Secret — enter value in the Render dashboard ──
       - key: GOOGLE_API_KEY
         sync: false
+
+      # ── Keras 2 compatibility (model was trained before Keras 3) ──
+      - key: TF_USE_LEGACY_KERAS
+        value: "1"
 
       # ── Model & LLM ──
       - key: GEMINI_MODEL
