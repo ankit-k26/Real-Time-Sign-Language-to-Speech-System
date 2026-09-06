@@ -99,7 +99,15 @@ async def synthesize(payload: dict):
 @app.websocket("/ws/infer")
 async def ws_infer(websocket: WebSocket):
     await websocket.accept()
-    session = SignSession()
+    try:
+        session = await run_in_threadpool(SignSession)
+    except Exception as exc:
+        import traceback
+        print(f"[ws_infer] ERROR creating SignSession: {exc}")
+        traceback.print_exc()
+        await websocket.send_json({"type": "error", "message": str(exc)})
+        await websocket.close()
+        return
     try:
         while True:
             raw = await websocket.receive_text()
@@ -141,7 +149,15 @@ async def _flush_and_send(websocket: WebSocket, session: SignSession):
 @app.websocket("/ws/collect")
 async def ws_collect(websocket: WebSocket):
     await websocket.accept()
-    session = CollectSession()
+    try:
+        session = await run_in_threadpool(CollectSession)
+    except Exception as exc:
+        import traceback
+        print(f"[ws_collect] ERROR creating CollectSession: {exc}")
+        traceback.print_exc()
+        await websocket.send_json({"type": "error", "message": str(exc)})
+        await websocket.close()
+        return
     try:
         while True:
             raw = await websocket.receive_text()
