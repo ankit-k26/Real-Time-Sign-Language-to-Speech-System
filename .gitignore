@@ -26,3 +26,5 @@ backend/processed/
 *.log
 .vscode/
 .idea/
+
+node_modules
