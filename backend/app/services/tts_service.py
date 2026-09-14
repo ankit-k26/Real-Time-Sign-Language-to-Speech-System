@@ -23,19 +23,40 @@ except ImportError:
 
 
 class TTSService:
-    """Synchronous, stateless synthesizer. Call from a threadpool in async code."""
+    """Synchronous, stateless synthesizer. Call from a threadpool in async code.
+
+    Backend is chosen via the TTS_BACKEND env var ("pyttsx3" or "gtts").
+    Falls back to whichever backend is actually installed/working if the
+    preferred one isn't available.
+    """
 
     def __init__(self, rate: int = 175, volume: float = 0.9, voice_index: int = 0):
         self._rate = rate
         self._volume = volume
         self._voice_index = voice_index
-        if _PYTTSX3_OK:
+
+        preferred = os.environ.get("TTS_BACKEND", "pyttsx3").strip().lower()
+
+        if preferred == "gtts" and _GTTS_OK:
+            self.backend = "gtts"
+        elif preferred == "pyttsx3" and _PYTTSX3_OK:
             self.backend = "pyttsx3"
         elif _GTTS_OK:
+            # Preferred backend unavailable — gTTS only needs internet, so
+            # it's the safer default fallback on a headless server.
             self.backend = "gtts"
+        elif _PYTTSX3_OK:
+            self.backend = "pyttsx3"
         else:
             self.backend = None
             print("[TTSService] WARNING: no TTS backend available.")
+
+        if preferred not in ("pyttsx3", "gtts"):
+            print(f"[TTSService] WARNING: unknown TTS_BACKEND={preferred!r}, using {self.backend!r}.")
+        elif self.backend != preferred:
+            print(f"[TTSService] Requested backend {preferred!r} unavailable, using {self.backend!r} instead.")
+        else:
+            print(f"[TTSService] Using backend: {self.backend}")
 
     def synthesize(self, text: str) -> tuple[bytes, str]:
         """Returns (audio_bytes, mime_type). Raises on failure."""

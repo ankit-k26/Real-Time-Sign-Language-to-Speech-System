@@ -26,7 +26,8 @@ except ImportError:
     _DEEPFACE_AVAILABLE = False
 
 # ── MediaPipe model setup ────────────────────────────────────────────────────
-MEDIAPIPE_FACE_MODEL_PATH = "face_landmarker.task"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MEDIAPIPE_FACE_MODEL_PATH = os.path.join(BASE_DIR, "face_landmarker.task")
 MEDIAPIPE_FACE_MODEL_URL  = (
     "https://storage.googleapis.com/mediapipe-models/"
     "face_landmarker/face_landmarker/float16/1/face_landmarker.task"

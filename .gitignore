@@ -14,8 +14,8 @@ frontend/.vite/
 backend/dataset/
 backend/processed/
 
-# Downloaded MediaPipe task files
-backend/*.task
+# Jupyter
+**/.ipynb_checkpoints/
 
 # Env files
 .env
