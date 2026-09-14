@@ -8,23 +8,26 @@ python-multipart>=0.0.9
 python-dotenv>=1.0.0
 
 # Core CV + ML
-# opencv-python-headless: no GUI deps — required for Render/Linux containers
-opencv-python-headless>=4.9.0
+opencv-python>=4.9.0
 mediapipe>=0.10.32
-numpy>=1.26.0,<2.0
-tensorflow>=2.18.0
-# tf-keras: Keras 2 compatibility shim for TF 2.16+
-# Required because sign_model.keras was trained with Keras 2 (batch_input_shape / time_major)
-# Combined with TF_USE_LEGACY_KERAS=1 env var this avoids retraining.
-tf-keras>=2.18.0
+numpy>=1.26.0
+tensorflow>=2.15.0,<2.16.0  # Keras 2 range — keeps sign_model.keras compatible
 scikit-learn>=1.4.0
 
 # LLM integration
 google-genai>=1.0.0
 
 # Text-to-Speech
-# pyttsx3 removed — requires local audio driver (not available on Render Linux)
+pyttsx3>=2.90
 gTTS>=2.5.0
 
 # Optional: richer emotion detection
 # deepface>=0.0.93
+
+# Notebooks (for training_notebook.ipynb)
+jupyter>=1.0.0
+ipykernel>=6.29.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# PyQt5 removed — gui.py is replaced by the React frontend

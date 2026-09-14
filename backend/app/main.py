@@ -99,15 +99,7 @@ async def synthesize(payload: dict):
 @app.websocket("/ws/infer")
 async def ws_infer(websocket: WebSocket):
     await websocket.accept()
-    try:
-        session = await run_in_threadpool(SignSession)
-    except Exception as exc:
-        import traceback
-        print(f"[ws_infer] ERROR creating SignSession: {exc}")
-        traceback.print_exc()
-        await websocket.send_json({"type": "error", "message": str(exc)})
-        await websocket.close()
-        return
+    session = SignSession()
     try:
         while True:
             raw = await websocket.receive_text()
@@ -149,15 +141,7 @@ async def _flush_and_send(websocket: WebSocket, session: SignSession):
 @app.websocket("/ws/collect")
 async def ws_collect(websocket: WebSocket):
     await websocket.accept()
-    try:
-        session = await run_in_threadpool(CollectSession)
-    except Exception as exc:
-        import traceback
-        print(f"[ws_collect] ERROR creating CollectSession: {exc}")
-        traceback.print_exc()
-        await websocket.send_json({"type": "error", "message": str(exc)})
-        await websocket.close()
-        return
+    session = CollectSession()
     try:
         while True:
             raw = await websocket.receive_text()
@@ -185,5 +169,5 @@ def preload_model():
     try:
         ModelRegistry.get()
         print("[startup] Model loaded.")
-    except FileNotFoundError as e:
-        print(f"[startup] WARNING: {e}")
+    except Exception as e:
+        print(f"[startup] WARNING: Could not load model — {e}")

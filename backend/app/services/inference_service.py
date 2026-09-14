@@ -33,7 +33,7 @@ MAX_TOKEN_BUFFER = 20
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HAND_MODEL_PATH = os.path.join(BASE_DIR, "hand_landmarker.task")
-MODEL_PATH = os.path.join(BASE_DIR, "models", "sign_model.keras")
+MODEL_PATH = os.path.join(BASE_DIR, "models", "sign_model.h5")
 META_PATH = os.path.join(BASE_DIR, "models", "model_meta.json")
 
 _model_lock = threading.Lock()
@@ -86,7 +86,7 @@ class ModelRegistry:
                 raise FileNotFoundError(
                     f"Model not found at {MODEL_PATH}. Train it via training_notebook.ipynb first."
                 )
-            cls._model = tf.keras.models.load_model(MODEL_PATH)
+            cls._model = tf.keras.models.load_model(MODEL_PATH, compile=False)
             with open(META_PATH) as f:
                 meta = json.load(f)
             cls._label_map = {int(k): v for k, v in meta["label_map"].items()}
