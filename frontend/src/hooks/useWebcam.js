@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
  * encodes it as a JPEG data URL, and calls `onFrame(base64)`.
  * This replaces collect_data.py / gui.py's cv2.VideoCapture(0) loop.
  */
-export function useWebcam(videoRef, onFrame, intervalMs = 150, active = true) {
+export function useWebcam(videoRef, onFrame, intervalMs = 450, active = true) {
   const streamRef = useRef(null);
   const canvasRef = useRef(document.createElement("canvas"));
 
@@ -14,7 +14,7 @@ export function useWebcam(videoRef, onFrame, intervalMs = 150, active = true) {
     let intervalId;
 
     navigator.mediaDevices
-      .getUserMedia({ video: { width: 640, height: 480 } })
+      .getUserMedia({ video: { width: 320, height: 240 } })
       .then((stream) => {
         streamRef.current = stream;
         if (videoRef.current) {
