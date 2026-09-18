@@ -1,10 +1,12 @@
 import { useState } from "react";
 import LivePage from "./components/LivePage";
 import CollectPage from "./components/CollectPage";
+import useKeepAlive from "./hooks/useKeepAlive";
 import "./styles.css";
 
 export default function App() {
   const [tab, setTab] = useState("live");
+  useKeepAlive(); // 🔴→🟢 keeps Render free-tier backend alive every 7 min
 
   return (
     <div className="app-shell">
